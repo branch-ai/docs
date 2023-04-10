@@ -7,10 +7,11 @@
   - [Hello World w/Search (Advanced)](#hello-world-wsearch-advanced)
   - [Hello World w/Search (Multiple Sources)](#hello-world-wsearch-multiple-sources)
   - [Chatbot (for Website Visitors)](#chatbot-for-website-visitors)
-  - [Recommendations - Content (for People Matching)](#recommendations-content-for-people-matching)
-  - [Recommendations - Collaborative (for Ecommerce)](#recommendations-collaborative-for-ecommerce)
+  - [Recommendations - Content (for People Matching)](#recommendations---content-for-people-matching)
+  - [Recommendations - Collaborative (for Ecommerce)](#recommendations---collaborative-for-ecommerce)
 - [Core Concepts](#core-concepts)
   - [Source](#source)
+  - [Document](#document)
   - [Transform](#transform)
   - [Pipeline](#pipeline)
   - [Destination](#destination)
@@ -40,10 +41,10 @@
   - [PUT /destination/{destination_id}](#put-destinationdestination_id)
   - [DELETE /destination/{destination_id}](#delete-destinationdestination_id)
 - [Adapter](#adapter-1)
-  - [GET /adapter/{destination_id}/retrieve/{document_id}](#get-adapterdestination_idretrievedocument_id)
-  - [GET /adapter/{destination_id}/query](#get-adapterdestination_idquery)
-  - [GET /adapter/{destination_id}](#get-adapterdestination_id)
-
+  - [GET /adapter/{adapter_id}/fetch/{document_id}](#get-adapteradapter_idfetchdocument_id)
+  - [GET /adapter/{adapter_id}/query](#get-adapteradapter_idquery)
+  - [GET /adapter/{adapter_id}](#get-adapteradapter_id)
+  - [POST /adapter](#post-adapter)
 
 ## Tutorials
 
@@ -174,7 +175,7 @@ pipeline = client.pipeline(
     )
 status = pipeline.start()
 adapter = client.adapter.search(pipeline)
-answer = inference.query("Projects for ACME Corp")
+documents = adapter.query("Projects for ACME Corp", top_k=10)
 ```
 
 
@@ -458,7 +459,7 @@ status = pipeline.start()
 
 # Generate recommendations
 adapter = client.adapter.recommend(product_pipeline)
-user_embedding = adapter.retrieve(id="<user_id>")
+user_embedding = client.adapter.fetch(user_pipeline).fetch(id="<user_id>")
 recommendations = adapter.query(embedding=user_embedding)
 ```
 
@@ -471,7 +472,7 @@ These are the key objects (serialized into JSON) that our application works with
 
 A source is a thin wrapper over a data source, be it an external SaaS tool (e.g. Notion, Confluence, Gmail), an internal database (e.g. PostgreSQL, Redshift) or website (e.g. www.example.com). Please use our UI or contact us for a list of supported sources, details on how to configure each of them and requests for additional support.
 ```
-class Source():
+class Source:
     id: Optional[int] = None
     name: Optional[str] = ""
     user_id: str
@@ -481,30 +482,43 @@ class Source():
     params: Optional[dict] = {}
 ```
 
+### Document
+
+The data to process is represented by a Document object. The [transforms](#transform) are run on Document object. 
+```
+class Document:
+    stage: str
+    id: Optional[str] = None
+    parent_ids: Optional[str] = None
+    root_id: Optional[str] = None
+    embedding: Optional[numpy.ndarray] = None
+    content: List[Element] = field(default_factory=list)
+    attributes: defaultdict(dict) = field(default_factory=dict)
+```
+
 ### Transform
 
-A transform takes in a source and converts it using the logic in the `logic` field. We offer out-of-the-box recipes (e.g. `split_embed_index` for split -> embed -> index). You can also define your own transform logic as custom Python code (idempotent functions).
+Each stage in the processing pipeline is represented as a transform. A transform takes in [Document(s)](#document) and applies the pre-defined logic to output [Document(s)](#document). We offer out-of-the-box recipes (e.g. `split_embed_index` for split -> embed -> index) as well as fundamental operators like text splitter, embedding generator, etc for user to build their own processing logic. You can also define your own transform logic as custom Python code (idempotent functions).
 ```
-class Transform():
+class Transform:
     id: int
     user_id: str
     name: str
     description: str
-    logic: str
+    params: dict
 ```
 
 ### Pipeline
 
-A pipeline comprises a list of sources, corresponding transforms and a destination, and is associated with a given user. All configurations for the pipeline, with the exception of the schedule, can be found in the YAML.
+A pipeline comprises a list of sources, corresponding transforms and destination, and is associated with a given user. All configurations for the pipeline, with the exception of the schedule, can be found in the YAML. The YAML contains the DAG representing the processing logic for the pipeline. 
 
 ```
-class Pipeline():
+class Pipeline:
     id: Optional[int] = None
     name: Optional[str] = ""
     user_id: str
-    source_ids: List[str]
-    transform_ids: List[str]
-    destination_id: str
+    source_ids: List[int]
+    destination_ids: List[int]
     yaml: str
     schedule: str
 
@@ -515,7 +529,7 @@ class Pipeline():
 A destination is a thin wrapper over a data store that is able to store the outputs of a pipeline. This could be a vector DB, a relational database, or blob storage.
 
 ```
-class Destination():
+class Destination:
     id: Optional[int] = None
     name: Optional[str] = ""
     user_id: str
@@ -527,9 +541,16 @@ class Destination():
 
 ### Adapter
 
-An adapter is a thin wrapper around a `destination` that:
-(a) Applies a pre-configured transformation on the input query (often the same transformation applied during insertion when it comes to vector indexes)
-(b) Manages authentication for accessing this destination, especially when the destination is a hosted offering
+An adapter is a thin wrapper around a `destination` that applies a pre-configured transformation on the input query (often bootstrapping onto the pipelines that were used to send data to vector indexes in the first place)
+
+```
+class Adapter:
+    id: Optional[int] = None
+    name: Optional[str] = ""
+    type: str
+    destination_id: int
+    pipeline_id: int
+```
 
 ### Model
 
@@ -736,32 +757,46 @@ Delete an existing destination
 
 ## Adapter
 
-### GET /adapter/{destination_id}/retrieve/{document_id}
+### GET /adapter/{adapter_id}/fetch/{document_id}
 Retrieve the embedding of a specific document in the destination
 
 #### Input
 - `document_id` in the url path, which refers to the ID of the desired document.
-- `destination_id` in the url path
+- `adapter_id` in the url path
 
 #### Output
 - `{"id": <document_id>, "embedding": [<FLOAT>, ...], "metadata" : {...}, "data" : {...}}`
 
 
-### GET /adapter/{destination_id}/query
+### GET /adapter/{adapter_id}/query
 Search the destination with a particular query
 
 #### Input
-- `destination_id` in the url path
+- `adapter_id` in the url path
 - `q` contains payload parameters, which are prepared as per the adapter definition and executed
 - `top_k` specifies the number of results to be returned, defaulting to 10 (max: 1000)
 
 #### Output
-- `{"results": [{"document_id" : ..., "distance" : <FLOAT>}, ...], "comment" : <outcome>}`
+- `{"results": [{"document_id" : ..., "certainty" : <FLOAT>}, ...], "comment" : <outcome>}`
 - Any errors should be reflected in the comment field.
 
-### GET /adapter/{destination_id}
+### GET /adapter/{adapter_id}
 Gets details associated with the adapter, including how it's defined and details of the documents in it
 
+#### Input
+- `adapter_id` in the url path
+
 #### Output
-- `{"id": <destination_id>, "destination_type" : "<DB type>", "adapter_type" : "...", "num_documents" : "...", "comment" : <outcome>}`
+- `{"id": <adapter_id>, "destination_type" : "<DB type>", "adapter_type" : "...", "num_documents" : "...", "comment" : <outcome>}`
 - Any errors should be reflected in the comment field.
+
+### POST /adapter
+Create a new adapter
+
+#### Input
+- Pipeline object in the JSON body.
+- `type` of adapter, e.g. `search` / `generate` / `answer`
+
+#### Output
+- `{ "id": <adapter_id>, "comment": <outcome> }`
+- Any errors should be reflected in the `comment` field.

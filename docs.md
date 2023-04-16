@@ -45,6 +45,8 @@
   - [GET /adapter/{adapter_id}/query](#get-adapteradapter_idquery)
   - [GET /adapter/{adapter_id}](#get-adapteradapter_id)
   - [POST /adapter](#post-adapter)
+- [Recipes](#recipes-1)
+  - [Web Page to Vector DB](#web-page-to-vector-DB)
 
 ## Tutorials
 
@@ -803,7 +805,7 @@ Create a new adapter
 
 
 ## Recipes
-### Web crawler to Vector DB
+### Web page to Vector DB
 Use this recipe to crawl pages and index the webpage content into a vector DB. The following steps are executed:
 - Spider using given domain name and seed urls to download the HTML of each page
 - Split the HTML into meaningful sections using heading tags (h1 .. h6)

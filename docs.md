@@ -800,3 +800,61 @@ Create a new adapter
 #### Output
 - `{ "id": <adapter_id>, "comment": <outcome> }`
 - Any errors should be reflected in the `comment` field.
+
+
+## Recipes
+### Web crawler to Vector DB
+Use this recipe to crawl pages and index the webpage content into a vector DB. The following steps are executed:
+- Spider using given domain name and seed urls to download the HTML of each page
+- Split the HTML into meaningful sections using heading tags (h1 .. h6)
+- Embed each section of the page using specified model
+- Write the embedding along with meta data to a given vector db
+
+```
+import branchai
+pipeline = branchai.recipes.webpage_embed_vectordb(
+  source={"params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
+  destination={"type": "weaviate", "connection_details": {"url": "http://localhost:8080"} } 
+)
+```
+
+#### Sample YAML for pipeline setup
+```
+info:
+  version: 0.0.1
+sources:
+  - webcrawl_8
+destinations:
+  - weaviate_8
+pipeline:
+  stages:
+    html_parse:
+      stage: parse_html
+      params:
+        chunking: true
+    generate_embed:
+      stage: langchain_generate_embedding
+      params:
+        type: huggingface
+    content_splitter:
+      stage: split_content
+    index_document:
+      stage: weaviate_index_document
+      params:
+        index_name: "html"
+      connections:
+        - weaviate_8
+  dag:
+    origin:
+      - webcrawl_8
+    webcrawl_8:
+      - html_parse
+    html_parse:
+      - content_splitter
+    content_splitter:
+      - generate_embed
+    generate_embed:
+      - index_document
+```
+
+

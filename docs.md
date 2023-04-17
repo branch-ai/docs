@@ -816,11 +816,13 @@ Use this recipe to crawl pages and index the webpage content into a vector DB. T
 import branchai
 pipeline = branchai.recipes.webpage_embed_vectordb(
   source={"params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
-  destination={"type": "weaviate", "connection_details": {"url": "http://localhost:8080"} } 
+  destination={"type": "weaviate", "index_name": "Pages", "connection_details": {"url": "http://localhost:8080"} },
+  schedule="5 * * * *"
 )
 ```
 
 #### Sample YAML for pipeline setup
+Running the recipe will setup the source and destination connectors. `recipes.webpage_embed_vectordb` will generate the following YAML for pipeline - 
 ```
 info:
   version: 0.0.1

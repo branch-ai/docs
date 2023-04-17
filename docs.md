@@ -817,7 +817,7 @@ import branchai
 pipeline = branchai.recipes.webpage_embed_vectordb(
   source={"params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
   destination={"type": "weaviate", "index_name": "Pages", "connection_details": {"url": "http://localhost:8080"} },
-  schedule="5 * * * *"
+  schedule="5 1 * * *"
 )
 ```
 

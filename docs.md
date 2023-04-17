@@ -817,8 +817,35 @@ import branchai
 pipeline = branchai.recipes.webpage_embed_vectordb(
   source={"params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
   destination={"type": "weaviate", "index_name": "Pages", "connection_details": {"url": "http://localhost:8080"} },
+  embedding_model="openai/text-embedding-ada-002",
   schedule="5 1 * * *"
 )
+```
+
+#### Generates source connector
+```
+payload = {
+    "user_id": user_id, 
+    "type": "webcrawl", 
+    "description": "crawl source connector",
+    "params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
+    "credentials": {}
+}
+response = requests.post("{}/source".format(server), json=payload)
+crawl = response.json()
+crawl
+```
+
+#### Generate destination connector
+```
+payload = {
+  "user_id": user_id,
+  "type": "weaviate",
+  "connection_details": {"url": "http://localhost:8080"}
+}
+response = requests.post("{}/destination".format(server), json=payload)
+weaviate = response.json()
+weaviate
 ```
 
 #### Sample YAML for pipeline setup

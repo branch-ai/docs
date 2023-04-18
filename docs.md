@@ -828,7 +828,7 @@ payload = {
     "user_id": user_id, 
     "type": "webcrawl", 
     "description": "crawl source connector",
-    "params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
+    "params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100, "enable_spider": true} },
     "credentials": {}
 }
 response = requests.post("{}/source".format(server), json=payload)

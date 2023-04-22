@@ -817,9 +817,10 @@ Use this recipe to crawl pages and index the webpage content into a vector DB. T
 ```
 payload = {
     "user_id": user_id, 
-    "source": {"domain": "docs.clearfeed.ai", "seed_urls": ["https://docs.clearfeed.ai/clearfeed-help-center/getting-started/readme"], "patterns": ["clearfeed-help-center"], "enable_spider": True},
-    "destination": {"type": "weaviate", "params": {"index_name": "Test3"}, "connection_details": {"url": "http://172.17.0.1:8080"} },
-    "embedding_model": "openai"
+    "source": {"domain": "example.com", "seed_urls": "seed_urls": ["https://example.com/"], "patterns": ["/page"], "enable_spider": True},
+    "destination": {"type": "weaviate", "params": {"index_name": "Pages"}, "connection_details": {"url": "http://172.17.0.1:8080"} },
+    "embedding": {"model: "openai"},
+    schedule="5 1 * * *"
 }
 response = requests.post("{}/recipes/webpage".format(server), json=payload)
 response.json()
@@ -832,7 +833,7 @@ import branchai
 pipeline = branchai.recipes.webpage_embed_vectordb(
   source={"params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
   destination={"type": "weaviate", "index_name": "Pages", "connection_details": {"url": "http://localhost:8080"} },
-  embedding_model="openai/text-embedding-ada-002",
+  embedding={"model: "openai"}
   schedule="5 1 * * *"
 )
 ```

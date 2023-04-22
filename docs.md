@@ -45,7 +45,7 @@
   - [GET /adapter/{adapter_id}/query](#get-adapteradapter_idquery)
   - [GET /adapter/{adapter_id}](#get-adapteradapter_id)
   - [POST /adapter](#post-adapter)
-- [Recipes](#recipes-1)
+- [Recipes](#recipes)
   - [Web Page to Vector DB](#web-page-to-vector-DB)
 
 ## Tutorials

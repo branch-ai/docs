@@ -46,7 +46,7 @@
   - [GET /adapter/{adapter_id}](#get-adapteradapter_id)
   - [POST /adapter](#post-adapter)
 - [Recipes](#recipes)
-  - [Web Page to Vector DB](#web-page-to-vector-DB)
+  - [Web Page to Vector DB](#web-page-to-vector-DB) 
 
 ## Tutorials
 
@@ -824,6 +824,14 @@ payload = {
 }
 response = requests.post("{}/recipes/webpage".format(server), json=payload)
 response.json()
+
+# Response
+{
+  'source': [{'id': 1, 'name': 'webcrawl_1'}],
+  'destination': [{'id': 1, 'name': 'weaviate_1'}],
+  'pipeline': {'id': 1, 'name': 'webpage_vectordb'},
+  'comment': 'Pipeline has been setup'
+}
 ```
 
 

@@ -812,6 +812,21 @@ Use this recipe to crawl pages and index the webpage content into a vector DB. T
 - Embed each section of the page using specified model
 - Write the embedding along with meta data to a given vector db
 
+
+#### Using API
+```
+payload = {
+    "user_id": user_id, 
+    "source": {"domain": "docs.clearfeed.ai", "seed_urls": ["https://docs.clearfeed.ai/clearfeed-help-center/getting-started/readme"], "patterns": ["clearfeed-help-center"], "enable_spider": True},
+    "destination": {"type": "weaviate", "params": {"index_name": "Test3"}, "connection_details": {"url": "http://172.17.0.1:8080"} },
+    "embedding_model": "openai"
+}
+response = requests.post("{}/recipes/webpage".format(server), json=payload)
+response.json()
+```
+
+
+#### Using Library
 ```
 import branchai
 pipeline = branchai.recipes.webpage_embed_vectordb(

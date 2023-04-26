@@ -819,17 +819,16 @@ payload = {
     "user_id": user_id, 
     "source": {"domain": "example.com", "seed_urls": "seed_urls": ["https://example.com/"], "patterns": ["/page"], "enable_spider": True},
     "destination": {"type": "weaviate", "params": {"index_name": "Pages"}, "connection_details": {"url": "http://172.17.0.1:8080"} },
-    "embedding": {"model: "openai"},
-    schedule="5 1 * * *"
+    "embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"}
 }
 response = requests.post("{}/recipes/webpage".format(server), json=payload)
 response.json()
 
 # Response
 {
-  'source': [{'id': 1, 'name': 'webcrawl_1'}],
-  'destination': [{'id': 1, 'name': 'weaviate_1'}],
-  'pipeline': {'id': 1, 'name': 'webpage_vectordb'},
+  'sources': [{'id': 1}],
+  'destinations': [{'id': 1}],
+  'pipeline': {'id': 1},
   'comment': 'Pipeline has been setup'
 }
 ```
@@ -838,13 +837,32 @@ response.json()
 #### Using Library
 ```
 import branchai
-pipeline = branchai.recipes.webpage_embed_vectordb(
-  source={"params": {"domain": "example.com", "seed_urls": ["https://example.com/"], "patterns": ["/page"], "max_url_count": 100} },
-  destination={"type": "weaviate", "index_name": "Pages", "connection_details": {"url": "http://localhost:8080"} },
-  embedding={"model: "openai"}
-  schedule="5 1 * * *"
-)
+client = branchai.Client(f"{server_url}")
+payload = {
+    "user_id": user_id, 
+    "source": {"domain": "example.com", "seed_urls": ["https://www.example.com"], "patterns": ["page"], "enable_spider": False, "css_selectors": ["body"]},
+    "destination": {"type": "weaviate", "params": {"index_name": "Page"}, "connection_details": {"url": "<weaviate server url>" },
+    "embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"}
+}
+pipeline = client.with_recipe("webpage").create_pipeline(payload)
+
 ```
+
+#### Parameters
+
+Parent | Attribute | Type | Description | Required (Y/N)
+--- | --- | --- | --- | --- 
+source | domain | string | Domain to be crawled | Y
+source | seed_urls | List[string] | List of seed urls to crawl | Y
+source | patterns | List[string] | List of url patterns to match for spidering | N
+source | enable_spider | Boolean | False - only seed_urls will be crawled. True - enable spidering starting from seed urls | Y
+source | css_selectors | List[string] | List of css selectors to select text from html page. If empty then entire text from `<body>` tag will be extracted | N
+destination | type | string | Type of vector db, only weaviate is supported now | Y
+destination | params | dict | Parameters for destination. `index_name` - Index name for vector db | Y
+destination | connection_details | dict | Connection parameters for destination | Y
+embedding | model | string | Model to be used for embedding generation. <br />1. `huggingface/sentence-transformers/all-mpnet-base-v2` [default]  <br />2. `openai/text-embedding-ada-002`| N
+embedding | api_key | string | API Key for model. Eg. OpenAI API Key | N
+
 
 #### Generates source connector
 ```
@@ -878,35 +896,33 @@ Running the recipe will setup the source and destination connectors. `recipes.we
 info:
   version: 0.0.1
 sources:
-  - webcrawl_8
+  - webcrawl_15
 destinations:
-  - weaviate_8
+  - weaviate_15
 pipeline:
   stages:
     html_parse:
       stage: parse_html
       params:
-        chunking: true
+        enable_chunking: False
+        css_selectors: ['main']
     generate_embed:
       stage: langchain_generate_embedding
       params:
-        type: huggingface
-    content_splitter:
-      stage: split_content
+        type: openai/text-embedding-ada-002
+        api_key: encrypted_openai_api_key
     index_document:
       stage: weaviate_index_document
       params:
-        index_name: "html"
+        index_name: Page
       connections:
-        - weaviate_8
+        - weaviate_15
   dag:
     origin:
-      - webcrawl_8
-    webcrawl_8:
+      - webcrawl_15
+    webcrawl_15:
       - html_parse
     html_parse:
-      - content_splitter
-    content_splitter:
       - generate_embed
     generate_embed:
       - index_document

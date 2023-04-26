@@ -35,6 +35,8 @@
   - [POST /pipeline](#post-pipeline)
   - [PUT /pipeline/{pipeline_id}](#put-pipelinepipeline_id)
   - [DELETE /pipeline/{pipeline_id}](#delete-pipelinepipeline_id)
+  - [POST /pipeline/start/{pipeline_id}](#post-pipelinestartpipeline_id)
+  - [POST /pipeline/stop/{pipeline_id}](#post-pipelinestoppipeline_id)
 - [Destination](#destination-1)
   - [GET /destination/{destination_id}](#get-destinationdestination_id)
   - [POST /destination](#post-destination)

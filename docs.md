@@ -913,7 +913,7 @@ payload = {
     "user_id": user_id, 
     "source": {"domain": "example.com", "seed_urls": ["https://www.example.com"], "patterns": ["page"], "enable_spider": False, "css_selectors": ["body"]},
     "destination": {"type": "weaviate", "params": {"index_name": "Page"}, "connection_details": {"url": "<weaviate server url>" },
-    "embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"}
+    "transform": {"embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"}}
 }
 pipeline = client.with_recipe("webpage").create_pipeline(payload)
 
@@ -932,8 +932,7 @@ source | params | dict | Source specific parameters. <br /> 1. `max_url_count` -
 destination | type | string | Type of vector db, only weaviate is supported now | Y
 destination | params | dict | Parameters for destination. `index_name` - Index name for vector db | Y
 destination | connection_details | dict | Connection parameters for destination | Y
-embedding | model | string | Model to be used for embedding generation. <br />1. `huggingface/sentence-transformers/all-mpnet-base-v2` [default]  <br />2. `openai/text-embedding-ada-002`| N
-embedding | api_key | string | API Key for model. Eg. OpenAI API Key | N
+transform | embedding | dict | Parameters for embedding model - <br />1. `model` - Model to be used for embedding generation. <br />a. `huggingface/sentence-transformers/all-mpnet-base-v2` [default]  <br />b. `openai/text-embedding-ada-002` <br />2. `api_key` - API Key for model. Eg. OpenAI API Key  | N
 
 
 #### Generates source connector

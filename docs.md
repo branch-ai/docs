@@ -890,7 +890,8 @@ payload = {
     "user_id": user_id, 
     "source": {"domain": "example.com", "seed_urls": "seed_urls": ["https://example.com/"], "patterns": ["/page"], "enable_spider": True},
     "destination": {"type": "weaviate", "params": {"index_name": "Pages"}, "connection_details": {"url": "http://172.17.0.1:8080"} },
-    "embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"}
+    "transform": {"embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"} },
+    "schedule": "12 hours"
 }
 response = requests.post("{}/recipes/webpage".format(server), json=payload)
 response.json()
@@ -913,7 +914,8 @@ payload = {
     "user_id": user_id, 
     "source": {"domain": "example.com", "seed_urls": ["https://www.example.com"], "patterns": ["page"], "enable_spider": False, "css_selectors": ["body"]},
     "destination": {"type": "weaviate", "params": {"index_name": "Page"}, "connection_details": {"url": "<weaviate server url>" },
-    "transform": {"embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"}}
+    "transform": {"embedding": {"model": "openai/text-embedding-ada-002", "api_key": "<openai api key>"}},
+    "schedule": "12 hours"
 }
 pipeline = client.with_recipe("webpage").create_pipeline(payload)
 
@@ -933,7 +935,7 @@ destination | type | string | Type of vector db, only weaviate is supported now 
 destination | params | dict | Parameters for destination. `index_name` - Index name for vector db | Y
 destination | connection_details | dict | Connection parameters for destination | Y
 transform | embedding | dict | Parameters for embedding model - <br />1. `model` - Model to be used for embedding generation. <br />a. `huggingface/sentence-transformers/all-mpnet-base-v2` [default]  <br />b. `openai/text-embedding-ada-002` <br />2. `api_key` - API Key for model. Eg. OpenAI API Key  | N
-
+schedule | | string | Frequency for the pipeline. Eg. "X minutes", "Y hours", "Z days". Default is adhoc | Y
 
 #### Generates source connector
 ```

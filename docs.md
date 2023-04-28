@@ -728,11 +728,10 @@ Delete a transform.
 Returns the pipelines that a user has created. Each pipeline is identified by a unique ID, and is configured by a YAML string. This can be used to generate a preview of the pipelines that a user has.
 
 #### Input
-- None.
+- `user_id` User Id
 
 #### Output
-- A list of pipeline configurations as a single JSON:
-```[{ "id": <pipeline_id>, "yaml": <pipeline_yaml> }, ...]```
+- A list of pipeline configurations. The details of the class can be found [here](#pipeline).
 
 
 ### GET /pipeline/{pipeline_id}

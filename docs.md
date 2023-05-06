@@ -602,6 +602,7 @@ class GenerateQuery:
     model: str
     temperature: Optional[float] = 0
     model: Optional[str] = "gpt-3.5-turbo"
+    session_id: Optional[str] = None
 ```
 
 ### Answer

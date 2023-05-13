@@ -17,7 +17,7 @@
   - [Destination](#destination)
   - [Queries](#queries)
   - [Model](#model)
-- [Authentication](#authentication)
+- [User](#user)
   - [POST /auth/login](#post-auth-login)
 - [Source](#source-1)
   - [GET /source/{source_id}](#get-sourcesource_id)
@@ -624,18 +624,66 @@ A model is a special type of resource that can be registered with us, in order t
 
 
 
-## Authentication
+## User
 
-### POST /auth/login
-Authenticate the user and return a JWT.
+### POST /user/create
+Create new user and get the bearer token.
+#### Request
+```
+curl -X 'POST' \
+  'http://localhost:8000/user/create' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "user_id": "bob@email.com",
+  "password": "password",
+  "fullname": "Bob Builder",
+  "email": "bob@email.com"
+}'
+```
+#### Response
+```
+{
+  "access_token": "long token string",
+  "token_type": "bearer"
+}
+```
 
-#### Input
-- Username and password base64 encoded in the HTTP headers, as per [fastapi](https://fastapi.tiangolo.com/advanced/security/http-basic-auth/) docs.
 
-#### Output
-- `{ "jwt": <generated_jwt> }`
-- This JWT needs to be authenticated upon every subsequent request for access to the application.
+### GET /user/me
+Using the token to get the user details
+#### Request
+```
+curl -X 'GET' \
+  'http://localhost:8000/users/me/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <token>'
+```
 
+#### Response
+```
+{
+  "user_id": "alice",
+  "password_salted": null,
+  "user_role": "user",
+  "status": "active"
+}
+```
+
+### POST /token
+Authenticate the user and fetch the token
+#### Request
+```
+curl -X 'POST' \
+  'http://localhost:8000/token' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'username=bob%40email.com&password=password'
+```
+#### Response
+```
+{"access_token":"long token","token_type":"bearer"}
+```
 
 ## Source
 
